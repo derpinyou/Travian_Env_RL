@@ -31,27 +31,33 @@ building_info = {building: {j+1: {'costs': dict_to_do.get(building)[j][1:6],
                                   'special': dict_to_do.get(building)[j][8]} for j in range(20)} for building
                                    in building_names}
 
-village_n = int(input())   # сколько деревнь?
-village_info_list = []
-for j in range(village_n):
-    village_info_list.append([int(x) for x in input().split(' ')]) ### ффффффккккллллрррргсазгдж + время + н/к
-keys = ['village' + str(j) for j in range(village_n)]
-village_info_dict_of_dicts = {}
-for j in range(len(keys)):
-    to_add = {'farm': village_info_list[j][:6],
-              'mine': village_info_list[j][6:10],
-              'lumber': village_info_list[j][10:14],
-              'pit': village_info_list[j][14:18],
-              'inside': village_info_list[j][18:21],
-              'resources': village_info_list[j][21:25],
-              'time_remaining': village_info_list[j][25],
-              'gains': village_info_list[j][26:],
-              'waiting_for': 'nothing'
-    }
-    village_info_dict_of_dicts[keys[j]] = to_add
+#village_n = int(input())   # сколько деревнь?
+#village_info_list = []
+#for j in range(village_n):
+#    village_info_list.append([int(x) for x in input().split(' ')]) ### ффффффккккллллрррргсазгдж + время + н/к
+#keys = ['village' + str(j) for j in range(village_n)]
+#village_info_dict_of_dicts = {}
+#for j in range(len(keys)):
+#    to_add = {'farm': village_info_list[j][:6],
+#              'mine': village_info_list[j][6:10],
+#              'lumber': village_info_list[j][10:14],
+#              'pit': village_info_list[j][14:18],
+#              'inside': village_info_list[j][18:21],
+#              'resources': village_info_list[j][21:25],
+#              'time_remaining': village_info_list[j][25],
+#              'gains': village_info_list[j][26:],
+#              'waiting_for': 'nothing'
+#    }
+#    village_info_dict_of_dicts[keys[j]] = to_add
 
 ### пример waiting_for - ('farm', 1, 6)
 ### inside[0] амбар inside[1] склад inside[2] гз
+
+village_info_dict_of_dicts = {'village0': {'farm': [5, 5, 5, 5, 5, 5], 'mine': [5, 5, 5, 5],
+                              'lumber': [5, 5, 5, 5], 'pit': [5, 5, 5, 5], 'inside': [5, 5, 5],
+                              'resources': [800, 800, 800, 800], 'time_remaining': 0,
+                              'gains': [100, 200], 'waiting_for' : 'nothing'}}
+
 
 class TravianEnv(gym.Env):
 
@@ -348,7 +354,8 @@ class TravianEnv(gym.Env):
         self.boost = [self.current_capacity_and_boost(i)[2] for i in range(self.village_n)]
         self.res_growths = [self.res_growth(i) for i in range(self.village_n)]
 
-        obs = self.X, self.gold, self.storage_capacities, self.granary_capacities, self.boost, self.current_time
+        obs = self.X, self.gold, self.storage_capacities, self.granary_capacities,\
+              self.boost, self.res_growths, self.current_time
 
         if self.current_time < 1000000000:
             done = False
@@ -357,16 +364,10 @@ class TravianEnv(gym.Env):
 
         return obs, reward, done, {}
 
+    def reset(self):
+        return village_info_dict_of_dicts, 10, [4000], [4000], [86], [198, 132, 132, 132], 0
+
+
 A = TravianEnv(village_info_dict_of_dicts, building_info, 10)
 
-print(A.step(17))
 print(A.res_growths)
-print(A.step(22))
-print(A.step(17))
-print(A.step(21))
-print(A.res_growths)
-print(A.step(21))
-
-
-
-### 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 800 800 800 800 0 100 200
