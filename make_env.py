@@ -342,10 +342,16 @@ class TravianEnv(gym.Env):
                     self.X['village' + str(integer_)]['time_remaining'] = self.is_available_and_rr(action)[2]
                     changes.append(self.X['village' + str(integer_)][changes[0]][changes[1]] + 1)
                     self.X['village' + str(integer_)]['waiting_for'] = changes
+                    print(self.X['village' + str(integer_)]['waiting_for'])
                     self.X['village' + str(integer_)]['resources'] = [res_[q] - j_costs[q] for q in range(4)]
-                    reward = (self.buildings_info[changes[0]][changes[2]]['gains'][1] +
-                              self.buildings_info[changes[0]][changes[2]]['gains'][0])/10
-                    print(changes)
+                    if changes[0] == 'inside':
+                        which_one = ['granary', 'storage', 'main'][changes[1]]
+                        reward = (self.buildings_info[which_one][changes[2]]['gains'][1] +
+                                  self.buildings_info[which_one][changes[2]]['gains'][0]) / 10
+                    else:
+                        reward = (self.buildings_info[changes[0]][changes[2]]['gains'][1] +
+                                  self.buildings_info[changes[0]][changes[2]]['gains'][0])/10
+                    print(self.X['village' + str(integer_)]['waiting_for'])
         else:
             pass
 
@@ -369,5 +375,3 @@ class TravianEnv(gym.Env):
 
 
 A = TravianEnv(village_info_dict_of_dicts, building_info, 10)
-
-print(A.res_growths)
