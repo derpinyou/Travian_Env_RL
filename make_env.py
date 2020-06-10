@@ -31,6 +31,11 @@ building_info = {building: {j+1: {'costs': dict_to_do.get(building)[j][1:6],
                                   'special': dict_to_do.get(building)[j][8]} for j in range(20)} for building
                                    in building_names}
 
+for building in building_names:
+    for lvl in range(1, 21):
+        pr = building_info[building][lvl]['costs']
+        pr[0], pr[1], pr[2], pr[3] = pr[3], pr[2], pr[0], pr[1]
+        building_info[str(building)][lvl]['costs'] = pr
 #village_n = int(input())   # сколько деревнь?
 #village_info_list = []
 #for j in range(village_n):
@@ -58,11 +63,12 @@ village_info_dict_of_dicts = {'village0': {'farm': [2, 2, 2, 2, 2, 2], 'mine': [
                               'resources': [800, 800, 800, 800], 'time_remaining': 0,
                               'gains': [28, 18], 'waiting_for' : 'nothing'}}
 gold = 10
-
+ban = 1296000
 
 class TravianEnv(gym.Env):
 
-    def __init__(self, X, buildings_info, gold):
+    def __init__(self, X, buildings_info, gold, ban):
+        self.ban = ban
         self.X = X
         self.village_n = len(X)
         self.buildings_info = buildings_info
@@ -124,9 +130,13 @@ class TravianEnv(gym.Env):
                 if a <= 5:
                     farm_lvl = self.X['village' + str(j)].get('farm')[a] + 1
                     if farm_lvl <= 20:
+                        res_for_ch2 = [self.granary_capacities[j], self.storage_capacities[j],
+                                       self.storage_capacities[j], self.storage_capacities[j]]
                         resources_in = self.X['village' + str(j)].get('resources')
                         resources_required = self.buildings_info['farm'].get(farm_lvl).get('costs')[:4]
-                        if not all(resources_in[i] >= resources_required[i] for i in range(len(resources_in))):
+                        check1 = all(resources_in[i] >= resources_required[i] for i in range(len(resources_in)))
+                        check2 = all(resources_required[i] <= res_for_ch2[i] for i in range(len(resources_required)))
+                        if not check1 and check2:
                             wow = [0 if resources_in[m] >= resources_required[m] else resources_required[m] - resources_in[m] for
                                  m in range(len(resources_in))]
                             time.append(max([wow[0] / self.res_growth(j)[0], wow[1] / self.res_growth(j)[1],
@@ -135,9 +145,13 @@ class TravianEnv(gym.Env):
                 if 5 < a <= 9:
                     mine_lvl = self.X['village' + str(j)].get('mine')[a-6] + 1
                     if mine_lvl <= 20:
+                        res_for_ch2 = [self.granary_capacities[j], self.storage_capacities[j],
+                                       self.storage_capacities[j], self.storage_capacities[j]]
                         resources_in = self.X['village' + str(j)].get('resources')
                         resources_required = self.buildings_info['mine'].get(mine_lvl).get('costs')[:4]
-                        if not all(resources_in[i] >= resources_required[i] for i in range(len(resources_in))):
+                        check1 = all(resources_in[i] >= resources_required[i] for i in range(len(resources_in)))
+                        check2 = all(resources_required[i] <= res_for_ch2[i] for i in range(len(resources_required)))
+                        if not check1 and check2:
                             wow = [0 if resources_in[w] >= resources_required[w] else resources_required[w] - resources_in[w]
                                    for
                                    w in range(len(resources_in))]
@@ -147,9 +161,13 @@ class TravianEnv(gym.Env):
                 if 9 < a <= 13:
                     lumber_lvl = self.X['village' + str(j)].get('lumber')[a-10] + 1
                     if lumber_lvl <= 20:
+                        res_for_ch2 = [self.granary_capacities[j], self.storage_capacities[j],
+                                       self.storage_capacities[j], self.storage_capacities[j]]
                         resources_in = self.X['village' + str(j)].get('resources')
                         resources_required = self.buildings_info['lumber'].get(lumber_lvl).get('costs')[:4]
-                        if not all(resources_in[i] >= resources_required[i] for i in range(len(resources_in))):
+                        check1 = all(resources_in[i] >= resources_required[i] for i in range(len(resources_in)))
+                        check2 = all(resources_required[i] <= res_for_ch2[i] for i in range(len(resources_required)))
+                        if not check1 and check2:
                             wow = [0 if resources_in[b] >= resources_required[b] else resources_required[b] - resources_in[b]
                                    for
                                    b in range(len(resources_in))]
@@ -157,11 +175,15 @@ class TravianEnv(gym.Env):
                                              wow[2] / self.res_growth(j)[2],
                                              wow[3] / self.res_growth(j)[3]]))
                 if 13 < a <= 17:
+                    res_for_ch2 = [self.granary_capacities[j], self.storage_capacities[j],
+                                   self.storage_capacities[j], self.storage_capacities[j]]
                     pit_lvl = self.X['village' + str(j)].get('pit')[a-14] + 1
                     if pit_lvl <= 20:
                         resources_in = self.X['village' + str(j)].get('resources')
                         resources_required = self.buildings_info['pit'].get(pit_lvl).get('costs')[:4]
-                        if not all(resources_in[i] >= resources_required[i] for i in range(len(resources_in))):
+                        check1 = all(resources_in[i] >= resources_required[i] for i in range(len(resources_in)))
+                        check2 = all(resources_required[i] <= res_for_ch2[i] for i in range(len(resources_required)))
+                        if not check1 and check2:
                             wow = [0 if resources_in[q] >= resources_required[q] else resources_required[q] - resources_in[q]
                                    for
                                    q in range(len(resources_in))]
@@ -169,12 +191,16 @@ class TravianEnv(gym.Env):
                                              wow[2] / self.res_growth(j)[2],
                                              wow[3] / self.res_growth(j)[3]]))
                 if 17 < a <= 20:
+                    res_for_ch2 = [self.granary_capacities[j], self.storage_capacities[j],
+                                   self.storage_capacities[j], self.storage_capacities[j]]
                     inside_building = ['granary', 'storage', 'main'][a - 18]
                     inside_lvl = self.X['village' + str(j)].get('inside')[a - 18] + 1
                     if inside_lvl <= 20:
                         resources_in = self.X['village' + str(j)].get('resources')
                         resources_required = self.buildings_info[inside_building].get(inside_lvl).get('costs')[:4]
-                        if not all(resources_in[i] >= resources_required[i] for i in range(len(resources_in))):
+                        check1 = all(resources_in[i] >= resources_required[i] for i in range(len(resources_in)))
+                        check2 = all(resources_required[i] <= res_for_ch2[i] for i in range(len(resources_required)))
+                        if not check1 and check2:
                             wow = [0 if resources_in[e] >= resources_required[e] else resources_required[e] - resources_in[e]
                                    for
                                    e in range(len(resources_in))]
@@ -225,6 +251,8 @@ class TravianEnv(gym.Env):
                     resources_required = 2
                     if self.gold < 2:
                         available = 0
+            if self.current_time <= self.ban:
+              available = 0
         elif self.X['village' + str(integer_)].get('time_remaining') > 0:
             available = 0
             resources_required = 0
@@ -331,7 +359,7 @@ class TravianEnv(gym.Env):
                             1]
 
                 self.current_time += step
-                reward = - step * 10 ** (-6)
+
             else:
                 if excess_ == 21:
                     self.gold -= self.is_available_and_rr(action)[1]
@@ -365,13 +393,20 @@ class TravianEnv(gym.Env):
                         self.X['village' + str(integer_)]['waiting_for'] = changes
                         self.X['village' + str(integer_)]['resources'] = [res_[q] - j_costs[q] for q in range(4)]
                         if changes[0] == 'inside':
+                          if changes[2] != 0:
                             which_one = ['granary', 'storage', 'main'][changes[1]]
-                            reward = (self.buildings_info[which_one][changes[2]]['gains'][1]/10 +
-                                      self.buildings_info[which_one][changes[2]]['gains'][0]) / 10
+                            reward = self.buildings_info[which_one][changes[2]]['gains'][1] - \
+                            self.buildings_info[which_one][changes[2]-1]['gains'][1]
+                          else:
+                            which_one = ['granary', 'storage', 'main'][changes[1]]
+                            reward = self.buildings_info[which_one][changes[2]]['gains'][1]
                         else:
-                            reward = (self.buildings_info[changes[0]][changes[2]]['gains'][1]/10 +
-                                      self.buildings_info[changes[0]][changes[2]]['gains'][0])/10
-
+                          if changes[2] != 0:
+                            reward = self.buildings_info[changes[0]][changes[2]]['gains'][1] - \
+                            self.buildings_info[changes[0]][changes[2]-1]['gains'][1]
+                          else:
+                            which_one = ['granary', 'storage', 'main'][changes[1]]
+                            reward = self.buildings_info[which_one][changes[2]]['gains'][1]
         self.granary_capacities = [self.current_capacity_and_boost(i)[0] for i in range(self.village_n)]
         self.storage_capacities = [self.current_capacity_and_boost(i)[1] for i in range(self.village_n)]
         self.boost = [self.current_capacity_and_boost(i)[2] for i in range(self.village_n)]
@@ -380,7 +415,6 @@ class TravianEnv(gym.Env):
 
         obs = self.X, self.gold, self.storage_capacities, self.granary_capacities,\
               self.boost, self.res_growths, self.current_time, self.Total_r
-
 
         if self.current_time < 2592000:
             done = False
@@ -406,7 +440,4 @@ class TravianEnv(gym.Env):
         self.boost = [self.current_capacity_and_boost(i)[2] for i in range(self.village_n)]
         self.res_growths = [self.res_growth(i) for i in range(self.village_n)]
         self.Total_r = 0
-        return village_info_dict_of_dicts, 10, [1200], [1200], [100], [26, 20, 20, 20], 0
-
-
-
+        return [2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 800, 800, 800, 800, 26, 20, 20, 20, 1200, 1200, 100, 0, 0]
